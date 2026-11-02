@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAP Access Restore Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        sap: {
+                            shell: '#354a5f', header: '#2c3e50', accent: '#0a6ed1', gold: '#f0ab00',
+                            bg: '#f5f7fa', border: '#d9d9d9', darkText: '#32363a', subText: '#6a6d70',
+                            red: '#bb0000', green: '#107e3e'
+                        },
+                        yai: { violet: '#6a3df0', deep: '#4b25c4', soft: '#efeaff', line: '#d6cbff' },
+                        snow: { teal: '#1f4b4d', green: '#62d84e', soft: '#eef8ec' }
+                    },
+                    fontFamily: { mono: ['Consolas', 'Monaco', 'Courier New', 'monospace'] }
+                }
+            }
+        }
+    </script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: '72', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .card { box-shadow: 0 0 2px 0 rgba(30,40,60,.15), 0 2px 4px 0 rgba(30,40,60,.08); }
+        .overlay { background-color: rgba(44, 62, 80, 0.55); backdrop-filter: blur(2px); }
+        .step { opacity: .35; transition: all .35s ease; }
+        .step.done, .step.active { opacity: 1; }
+        .fade-in { animation: fade .4s ease; }
+        @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    </style>
+</head>
+<body class="h-full flex flex-col select-none overflow-hidden bg-sap-bg text-sap-darkText">
+
+    <!-- SHELL BAR -->
+    <header class="h-12 bg-sap-shell text-white px-4 flex items-center justify-between flex-shrink-0 shadow-md">
+        <div class="flex items-center space-x-3">
+            <div class="bg-gradient-to-br from-sap-gold to-amber-600 font-extrabold text-sap-header text-xs px-2 py-0.5 rounded font-mono">SAP</div>
+            <div class="h-4 w-px bg-slate-400/50"></div>
+            <span id="shell-title" class="text-xs font-semibold tracking-wide text-slate-100">SAP Logon 800</span>
+            <span class="text-xs text-slate-400">/</span>
+            <span id="shell-sub" class="text-xs font-mono text-slate-300">Workstation FRA-NB-21877</span>
+        </div>
+        <div class="flex items-center space-x-4 text-xs">
+            <div class="hidden md:flex items-center space-x-2">
+                <span id="sys-dot" class="inline-block w-2 h-2 rounded-full bg-red-400"></span>
+                <span id="sys-label" class="text-slate-200 font-mono text-[11px]">P01 · not connected</span>
+            </div>
+            <div class="h-4 w-px bg-slate-400/50"></div>
+            <div class="flex items-center space-x-2">
+                <div class="w-7 h-7 rounded-full bg-sap-accent text-white flex items-center justify-center font-bold text-xs">SR</div>
+                <div class="hidden sm:block">
+                    <div class="font-semibold text-white leading-none text-[11px]">Suraj Rajan</div>
+                    <div class="text-[10px] text-slate-300 leading-tight">Group Controlling · Frankfurt</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- SUB HEADER -->
+    <div class="h-10 bg-white border-b border-sap-border px-6 flex items-center justify-between flex-shrink-0 text-xs">
+        <div class="flex items-center space-x-4">
+            <span id="app-title" class="font-bold text-sm">SAP Logon – Connections</span>
+            <span class="text-sap-subText hidden md:inline">•</span>
+            <span class="text-sap-subText font-mono hidden md:inline">Employee ID: <strong class="text-sap-darkText">310574</strong></span>
+            <span class="text-sap-subText hidden md:inline">•</span>
+            <span class="text-sap-subText hidden md:inline">Location: <strong class="text-sap-darkText">Frankfurt, DE</strong></span>
+        </div>
+        <div id="status-pill" class="flex items-center space-x-1.5 px-3 py-1 rounded text-xs font-semibold"></div>
+    </div>
+
+    <main class="flex-1 min-h-0 relative p-4 md:p-6 overflow-y-auto flex flex-col">
+
+        <!-- STATE 0: SAP LOGON ERROR -->
+        <div id="state-0" class="w-full max-w-4xl relative m-auto">
+            <div class="bg-white rounded border border-sap-border card overflow-hidden">
+                <div class="bg-slate-100 border-b border-sap-border px-4 py-2 flex items-center justify-between">
+                    <div class="flex items-center space-x-2 text-xs font-semibold">
+                        <i data-lucide="monitor" class="w-4 h-4 text-sap-accent"></i>
+                        <span>SAP Logon 800 – Connections</span>
+                    </div>
+                    <span class="text-[11px] font-mono text-sap-subText">SAP GUI for Windows 8.00 PL2 · installed 26 Oct 2026, 02:14 CET</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-4">
+                    <div class="hidden sm:block col-span-1 border-r border-sap-border p-3 text-xs space-y-1.5 bg-slate-50">
+                        <div class="font-semibold text-sap-subText uppercase text-[10px] tracking-wider mb-2">Workspaces</div>
+                        <div class="flex items-center space-x-2 bg-blue-50 text-sap-accent rounded px-2 py-1"><i data-lucide="folder-open" class="w-3.5 h-3.5"></i><span>Connections</span></div>
+                        <div class="flex items-center space-x-2 px-2 py-1 text-sap-subText"><i data-lucide="star" class="w-3.5 h-3.5"></i><span>Favourites</span></div>
+                        <div class="flex items-center space-x-2 px-2 py-1 text-sap-subText"><i data-lucide="link" class="w-3.5 h-3.5"></i><span>Shortcuts</span></div>
+                    </div>
+                    <div class="sm:col-span-3 overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead>
+                                <tr class="bg-slate-100 border-b border-sap-border text-sap-subText text-[11px] font-mono">
+                                    <th class="p-2.5">NAME</th><th class="p-2.5">DESCRIPTION</th><th class="p-2.5">SID</th><th class="p-2.5">MESSAGE SERVER</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 font-mono text-[11px]">
+                                <tr class="bg-red-50">
+                                    <td class="p-2.5 font-bold text-sap-red">P01</td>
+                                    <td class="p-2.5 font-sans">S/4HANA Production – Finance</td>
+                                    <td class="p-2.5">P01</td>
+                                    <td class="p-2.5 text-sap-red">sapp01-legacy.de.intra:3200 <span class="font-sans text-[10px]">(decommissioned)</span></td>
+                                </tr>
+                                <tr><td class="p-2.5 font-bold">Q01</td><td class="p-2.5 font-sans">S/4HANA Quality Assurance</td><td class="p-2.5">Q01</td><td class="p-2.5">sapq01.de.intra:3200</td></tr>
+                                <tr><td class="p-2.5 font-bold">D01</td><td class="p-2.5 font-sans">S/4HANA Development</td><td class="p-2.5">D01</td><td class="p-2.5">sapd01.de.intra:3200</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error dialog -->
+            <div class="absolute inset-0 flex items-center justify-center">
+                <div class="bg-white rounded border border-sap-border shadow-2xl w-full max-w-md overflow-hidden fade-in">
+                    <div class="bg-sap-red text-white px-4 py-2.5 flex items-center space-x-2">
+                        <i data-lucide="circle-x" class="w-5 h-5"></i>
+                        <span class="text-xs font-bold">SAP GUI for Windows 800 – Connection Error</span>
+                    </div>
+                    <div class="p-5 space-y-3 text-xs">
+                        <p class="font-semibold text-sm text-sap-red">Partner 'sapp01-legacy.de.intra:3200' not reached</p>
+                        <div class="bg-slate-50 border border-slate-200 rounded p-3 font-mono text-[11px] space-y-0.5 text-slate-700">
+                            <div>Time: Mon 26 Oct 2026 08:47:12 CET</div>
+                            <div>Component: NI (Network Interface)</div>
+                            <div>Release: 800 · Return code: -10</div>
+                            <div>Module: nixxi.cpp · Method: NiPConnect2</div>
+                        </div>
+                        <p class="text-sap-subText italic text-[11px]">Please contact the IT Service Desk or the virtual voice assistant.</p>
+                        <div class="flex justify-end"><span class="px-4 py-1.5 rounded bg-sap-accent text-white font-semibold">OK</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STATE 1: YELLOW.AI ORCHESTRATION OVERLAY -->
+        <div id="state-1" class="hidden fixed inset-0 z-50 overlay flex p-4 overflow-y-auto">
+            <div class="bg-white rounded-lg shadow-2xl w-full max-w-xl overflow-hidden fade-in m-auto">
+                <div class="bg-gradient-to-r from-yai-deep to-yai-violet text-white px-5 py-3 flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <i data-lucide="sparkles" class="w-4 h-4 text-yellow-300"></i>
+                        <span class="text-xs font-bold uppercase tracking-wider">Yellow.ai Agentic Service Desk</span>
+                    </div>
+                    <span class="text-[10px] font-mono bg-white/15 px-2 py-0.5 rounded">Voice · Amazon Connect</span>
+                </div>
+                <div class="p-5 space-y-4">
+                    <div>
+                        <h4 class="text-sm font-bold">Diagnosing SAP access issue for Suraj Rajan</h4>
+                        <p class="text-xs text-sap-subText mt-0.5">Intent: <span class="font-mono">sap_login_failure</span> · Ticket <span class="font-mono font-semibold">INC0051384</span> opened in ServiceNow</p>
+                    </div>
+                    <div class="space-y-2 text-xs" id="steps">
+                        <div class="step flex items-start space-x-3 p-2.5 rounded border border-slate-200">
+                            <i data-lucide="shield-check" class="w-4 h-4 mt-0.5 text-yai-violet flex-shrink-0"></i>
+                            <div><div class="font-semibold">Identity verified</div><div class="text-sap-subText">One-time code sent to +49 ••• ••• 7702 · confirmed</div></div>
+                        </div>
+                        <div class="step flex items-start space-x-3 p-2.5 rounded border border-slate-200">
+                            <i data-lucide="activity" class="w-4 h-4 mt-0.5 text-sap-accent flex-shrink-0"></i>
+                            <div><div class="font-semibold">SysTrack telemetry · FRA-NB-21877</div><div class="text-sap-subText">SAP GUI 8.00 PL2 installed 02:14 CET · SAPUILandscape.xml reset to legacy server · 2 SAP Logon crashes today · Network, VPN, disk: healthy</div></div>
+                        </div>
+                        <div class="step flex items-start space-x-3 p-2.5 rounded border border-slate-200">
+                            <i data-lucide="user-check" class="w-4 h-4 mt-0.5 text-sap-green flex-shrink-0"></i>
+                            <div><div class="font-semibold">SAP user status check · P01</div><div class="text-sap-subText">User SRAJAN not locked · password valid · roles unchanged</div></div>
+                        </div>
+                        <div class="step flex items-start space-x-3 p-2.5 rounded border border-slate-200">
+                            <i data-lucide="book-open" class="w-4 h-4 mt-0.5 text-snow-teal flex-shrink-0"></i>
+                            <div><div class="font-semibold">ServiceNow KB match · KB0018842</div><div class="text-sap-subText">"SAP Logon points to decommissioned server after GUI 8.00 update" · 96% match · 41 similar incidents this week</div></div>
+                        </div>
+                        <div class="step flex items-start space-x-3 p-2.5 rounded border border-slate-200">
+                            <i data-lucide="wrench" class="w-4 h-4 mt-0.5 text-amber-600 flex-shrink-0"></i>
+                            <div><div class="font-semibold">Automated remediation</div><div class="text-sap-subText">Pushing corrected landscape file (P01 → sapp01.de.intra:3200) · restarting SAP Logon</div></div>
+                        </div>
+                        <div class="step flex items-start space-x-3 p-2.5 rounded border border-slate-200">
+                            <i data-lucide="circle-check" class="w-4 h-4 mt-0.5 text-sap-green flex-shrink-0"></i>
+                            <div><div class="font-semibold">Fix applied · awaiting user confirmation</div><div class="text-sap-subText">P01 reachable · connection test passed in 0.4 s</div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-yai-soft px-5 py-2 border-t border-yai-line text-center text-[10px] text-yai-deep font-mono">
+                    Data processed in EU region (Frankfurt) · GDPR-compliant · every action logged to ServiceNow
+                </div>
+            </div>
+        </div>
+
+        <!-- STATE 2: SAP FIORI LAUNCHPAD (ACCESS RESTORED) -->
+        <div id="state-2" class="hidden w-full flex flex-col space-y-5 pb-2">
+            <div class="bg-emerald-50 border-l-4 border-sap-green p-4 rounded shadow-sm flex items-center justify-between fade-in">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-emerald-600 text-white rounded-full"><i data-lucide="check" class="w-5 h-5"></i></div>
+                    <div>
+                        <h3 class="text-sm font-bold text-emerald-900">SAP Access Restored</h3>
+                        <p class="text-xs text-emerald-700">SAP Logon configuration corrected automatically by the IT Service Desk. Roles and authorisations unchanged.</p>
+                    </div>
+                </div>
+                <div class="text-right font-mono text-xs text-emerald-800 bg-white/80 px-3 py-1.5 rounded border border-emerald-200">
+                    ServiceNow: <strong>INC0051384</strong>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between">
+                <h2 class="text-base font-bold">Welcome, Suraj Rajan</h2>
+                <span class="text-xs text-sap-subText font-mono">P01 · Client 100 · Company Code DE01</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded border border-sap-border card flex flex-col justify-between h-36">
+                    <div>
+                        <div class="flex justify-between items-start"><span class="text-xs font-semibold text-sap-subText uppercase tracking-wider">Month-End Close · Oct 2026</span><i data-lucide="calendar-check" class="w-4 h-4 text-sap-accent"></i></div>
+                        <div class="text-2xl font-bold mt-2">68%</div>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded h-1.5"><div class="bg-sap-accent h-1.5 rounded" style="width:68%"></div></div>
+                    <div class="text-[11px] text-sap-subText">Deadline: 30 Oct 2026</div>
+                </div>
+                <div class="bg-white p-4 rounded border border-sap-border card flex flex-col justify-between h-36">
+                    <div>
+                        <div class="flex justify-between items-start"><span class="text-xs font-semibold text-sap-subText uppercase tracking-wider">Open Items</span><i data-lucide="file-clock" class="w-4 h-4 text-sap-accent"></i></div>
+                        <div class="text-2xl font-bold mt-2">142</div>
+                    </div>
+                    <div class="flex items-center justify-between text-[11px]"><span class="text-sap-subText">Payables DE01</span><span class="text-amber-600 font-semibold">18 overdue</span></div>
+                </div>
+                <div class="bg-white p-4 rounded border border-sap-border card flex flex-col justify-between h-36">
+                    <div>
+                        <div class="flex justify-between items-start"><span class="text-xs font-semibold text-sap-subText uppercase tracking-wider">Cost Centres Actual vs Plan</span><i data-lucide="chart-column" class="w-4 h-4 text-sap-accent"></i></div>
+                        <div class="text-2xl font-bold mt-2">−2.3%</div>
+                    </div>
+                    <div class="flex items-center justify-between text-[11px]"><span class="text-emerald-600 font-medium">Within tolerance</span><span class="text-sap-subText font-mono">CC 4100–4190</span></div>
+                </div>
+                <div class="bg-white p-4 rounded border border-sap-border card flex flex-col justify-between h-36">
+                    <div>
+                        <div class="flex justify-between items-start"><span class="text-xs font-semibold text-sap-subText uppercase tracking-wider">Postings to Approve</span><i data-lucide="stamp" class="w-4 h-4 text-sap-accent"></i></div>
+                        <div class="text-2xl font-bold mt-2">9</div>
+                    </div>
+                    <div class="text-[11px] text-sap-subText">Total: <span class="font-mono font-semibold text-sap-darkText">€1,248,300.00</span></div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded border border-sap-border card flex flex-col overflow-hidden">
+                <div class="px-4 py-3 border-b border-sap-border bg-slate-50 flex items-center justify-between">
+                    <div class="flex items-center space-x-2"><i data-lucide="list-checks" class="w-4 h-4 text-sap-accent"></i><h4 class="text-xs font-bold uppercase tracking-wider">Closing Tasks – Group Controlling</h4></div>
+                    <span class="text-[11px] font-mono text-sap-subText">Period 010/2026</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead>
+                            <tr class="bg-slate-100 border-b border-sap-border text-sap-subText font-semibold text-[11px] font-mono">
+                                <th class="p-3">TASK</th><th class="p-3">OWNER</th><th class="p-3">AMOUNT</th><th class="p-3">DUE</th><th class="p-3">STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200 text-[11px]">
+                            <tr><td class="p-3 font-medium">Post accruals and provisions</td><td class="p-3">S. Rajan</td><td class="p-3 font-mono">€385,000.00</td><td class="p-3 font-mono">27 Oct 2026</td><td class="p-3"><span class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-bold text-[10px]">In Progress</span></td></tr>
+                            <tr><td class="p-3 font-medium">Intercompany reconciliation DE01 / FR02</td><td class="p-3">S. Rajan</td><td class="p-3 font-mono">€2,140,750.00</td><td class="p-3 font-mono">28 Oct 2026</td><td class="p-3"><span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold text-[10px]">Open</span></td></tr>
+                            <tr><td class="p-3 font-medium">Q4 cost centre allocation</td><td class="p-3">M. Schneider</td><td class="p-3 font-mono">€612,480.00</td><td class="p-3 font-mono">29 Oct 2026</td><td class="p-3"><span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[10px]">Completed</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- STATE 3: SERVICENOW TICKET CLOSED + LEARN -->
+        <div id="state-3" class="hidden w-full max-w-6xl m-auto pb-2">
+            <div class="bg-white rounded border border-sap-border card overflow-hidden fade-in">
+                <div class="bg-snow-teal text-white px-5 py-3 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <span class="font-bold text-sm tracking-wide">servicenow</span>
+                        <span class="text-xs text-teal-100">Incident · INC0051384</span>
+                    </div>
+                    <span class="flex items-center space-x-1.5 bg-snow-green text-snow-teal text-xs font-bold px-3 py-1 rounded"><i data-lucide="circle-check" class="w-3.5 h-3.5"></i><span>Closed – Resolved by Virtual Agent</span></span>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3">
+                    <div class="p-5 border-b lg:border-b-0 lg:border-r border-sap-border text-xs space-y-2.5">
+                        <div class="font-semibold text-sap-subText uppercase text-[10px] tracking-wider">Ticket details</div>
+                        <div class="grid grid-cols-2 gap-y-2">
+                            <span class="text-sap-subText">Caller</span><span class="font-semibold">Suraj Rajan</span>
+                            <span class="text-sap-subText">Location</span><span>Frankfurt am Main, DE</span>
+                            <span class="text-sap-subText">Channel</span><span>Voice (Amazon Connect)</span>
+                            <span class="text-sap-subText">Category</span><span>Software › SAP GUI</span>
+                            <span class="text-sap-subText">CI</span><span class="font-mono">FRA-NB-21877</span>
+                            <span class="text-sap-subText">Assigned to</span><span>Yellow.ai Virtual Agent</span>
+                            <span class="text-sap-subText">Resolution code</span><span class="font-semibold text-sap-green">Solved – Automated</span>
+                            <span class="text-sap-subText">Knowledge used</span><span class="font-mono">KB0018842</span>
+                            <span class="text-sap-subText">Opened</span><span class="font-mono">08:49 CET</span>
+                            <span class="text-sap-subText">Resolved</span><span class="font-mono">08:53 CET</span>
+                            <span class="text-sap-subText">Handling time</span><span class="font-semibold">3 min 52 s</span>
+                        </div>
+                    </div>
+                    <div class="p-5 border-b lg:border-b-0 lg:border-r border-sap-border text-xs space-y-3">
+                        <div class="font-semibold text-sap-subText uppercase text-[10px] tracking-wider">Work notes (auto-generated)</div>
+                        <div class="space-y-2.5">
+                            <div class="flex space-x-2"><span class="font-mono text-sap-subText w-12 flex-shrink-0">08:49</span><span>Caller verified via one-time code (+49 ••• 7702).</span></div>
+                            <div class="flex space-x-2"><span class="font-mono text-sap-subText w-12 flex-shrink-0">08:50</span><span>SysTrack: SAP GUI 8.00 PL2 deployed 02:14; landscape file reset to legacy P01 server; 2 crashes.</span></div>
+                            <div class="flex space-x-2"><span class="font-mono text-sap-subText w-12 flex-shrink-0">08:50</span><span>SAP user SRAJAN: not locked, password valid.</span></div>
+                            <div class="flex space-x-2"><span class="font-mono text-sap-subText w-12 flex-shrink-0">08:51</span><span>KB0018842 applied. Corrected SAPUILandscape.xml pushed; SAP Logon restarted.</span></div>
+                            <div class="flex space-x-2"><span class="font-mono text-sap-subText w-12 flex-shrink-0">08:53</span><span>Caller confirmed successful login to P01. Ticket closed.</span></div>
+                        </div>
+                    </div>
+                    <div class="p-5 text-xs space-y-4 bg-slate-50">
+                        <div>
+                            <div class="font-semibold text-sap-subText uppercase text-[10px] tracking-wider mb-2">Closure notification · Teams + Email</div>
+                            <div class="bg-white border border-yai-line rounded p-3 space-y-1.5">
+                                <div class="flex items-center space-x-2 text-yai-deep font-semibold"><i data-lucide="message-square" class="w-3.5 h-3.5"></i><span>IT Service Desk</span></div>
+                                <p>Hello Mr Rajan, your ticket <strong>INC0051384</strong> has been resolved. Your SAP Logon configuration was corrected and your access to P01 is restored.</p>
+                                <p class="text-sap-subText">Was this helpful? 👍 👎 · Anything else we can help with?</p>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="font-semibold text-sap-subText uppercase text-[10px] tracking-wider mb-2">Close &amp; Learn</div>
+                            <div class="bg-yai-soft border border-yai-line rounded p-3 space-y-1.5">
+                                <div class="flex items-center space-x-2 text-yai-deep font-semibold"><i data-lucide="lightbulb" class="w-3.5 h-3.5"></i><span>KB update suggested</span></div>
+                                <p>Add the caller's symptom phrasing ("Partner not reached") and the automated fix to KB0018842.</p>
+                                <p>Flagged to Endpoint team: 41 devices affected by the same GUI 8.00 package. Proactive fix recommended for the remaining 213 devices in Germany.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="h-6 bg-slate-200 border-t border-sap-border px-4 flex items-center justify-between text-[11px] font-mono text-sap-subText flex-shrink-0">
+        <span id="footer-msg" class="flex items-center space-x-1.5 font-semibold"></span>
+        <div class="flex items-center space-x-4">
+            <span class="hidden md:inline">→ / Space: next · ←: back · R: reset</span>
+            <span>26 Oct 2026</span>
+            <span id="clock">08:47 CET</span>
+        </div>
+    </footer>
+
+    <script>
+        let currentState = 0;
+        const LAST = 3;
+        const states = [0,1,2,3].map(i => document.getElementById('state-' + i));
+        const pill = document.getElementById('status-pill');
+        const footer = document.getElementById('footer-msg');
+        const sysDot = document.getElementById('sys-dot');
+        const sysLabel = document.getElementById('sys-label');
+        const shellTitle = document.getElementById('shell-title');
+        const shellSub = document.getElementById('shell-sub');
+        const appTitle = document.getElementById('app-title');
+        const clock = document.getElementById('clock');
+        let stepTimers = [];
+
+        function runSteps() {
+            const steps = document.querySelectorAll('#steps .step');
+            steps.forEach(s => s.classList.remove('done', 'active', 'border-yai-line'));
+            steps.forEach((s, i) => {
+                stepTimers.push(setTimeout(() => {
+                    if (i > 0) steps[i-1].classList.replace('active', 'done');
+                    s.classList.add('active', 'border-yai-line');
+                }, 700 + i * 1100));
+            });
+        }
+
+        function render() {
+            states.forEach(s => s.classList.add('hidden'));
+            stepTimers.forEach(clearTimeout); stepTimers = [];
+
+            if (currentState === 0) {
+                states[0].classList.remove('hidden');
+                pill.className = "flex items-center space-x-1.5 px-3 py-1 rounded text-xs font-semibold bg-red-100 text-sap-red border border-red-200";
+                pill.innerHTML = '<i data-lucide="wifi-off" class="w-3.5 h-3.5"></i><span>CONNECTION FAILED</span>';
+                footer.className = "flex items-center space-x-1.5 text-sap-red font-semibold";
+                footer.innerHTML = '<i data-lucide="alert-circle" class="w-3.5 h-3.5"></i><span>P01: Partner not reached (NiPConnect2, rc -10)</span>';
+                sysDot.className = "inline-block w-2 h-2 rounded-full bg-red-400";
+                sysLabel.textContent = "P01 · not connected";
+                shellTitle.textContent = "SAP Logon 800"; shellSub.textContent = "Workstation FRA-NB-21877";
+                appTitle.textContent = "SAP Logon – Connections"; clock.textContent = "08:47 CET";
+            } else if (currentState === 1) {
+                states[0].classList.remove('hidden');
+                states[1].classList.remove('hidden');
+                pill.className = "flex items-center space-x-1.5 px-3 py-1 rounded text-xs font-semibold bg-yai-soft text-yai-deep border border-yai-line animate-pulse";
+                pill.innerHTML = '<i data-lucide="refresh-cw" class="w-3.5 h-3.5 animate-spin"></i><span>AUTOMATED DIAGNOSIS RUNNING</span>';
+                footer.className = "flex items-center space-x-1.5 text-yai-deep font-semibold";
+                footer.innerHTML = '<i data-lucide="refresh-cw" class="w-3.5 h-3.5 animate-spin"></i><span>Yellow.ai: SysTrack + ServiceNow KB0018842 · applying fix</span>';
+                sysDot.className = "inline-block w-2 h-2 rounded-full bg-amber-400";
+                sysLabel.textContent = "P01 · repairing";
+                clock.textContent = "08:50 CET";
+                runSteps();
+            } else if (currentState === 2) {
+                states[2].classList.remove('hidden');
+                pill.className = "flex items-center space-x-1.5 px-3 py-1 rounded text-xs font-semibold bg-emerald-100 text-sap-green border border-emerald-200";
+                pill.innerHTML = '<i data-lucide="plug-zap" class="w-3.5 h-3.5"></i><span>CONNECTED · P01</span>';
+                footer.className = "flex items-center space-x-1.5 text-sap-green font-semibold";
+                footer.innerHTML = '<i data-lucide="check-circle" class="w-3.5 h-3.5"></i><span>Logged on to P01 (Client 100). Session active.</span>';
+                sysDot.className = "inline-block w-2 h-2 rounded-full bg-emerald-400";
+                sysLabel.textContent = "P01 · connected";
+                shellTitle.textContent = "SAP Fiori Launchpad"; shellSub.textContent = "S/4HANA P01 · Client 100";
+                appTitle.textContent = "Home – Finance"; clock.textContent = "08:52 CET";
+            } else {
+                states[3].classList.remove('hidden');
+                pill.className = "flex items-center space-x-1.5 px-3 py-1 rounded text-xs font-semibold bg-snow-soft text-snow-teal border border-emerald-200";
+                pill.innerHTML = '<i data-lucide="ticket-check" class="w-3.5 h-3.5"></i><span>TICKET CLOSED · INC0051384</span>';
+                footer.className = "flex items-center space-x-1.5 text-snow-teal font-semibold";
+                footer.innerHTML = '<i data-lucide="check-circle" class="w-3.5 h-3.5"></i><span>ServiceNow updated · closure sent via Teams and email · KB update suggested</span>';
+                sysDot.className = "inline-block w-2 h-2 rounded-full bg-emerald-400";
+                sysLabel.textContent = "P01 · connected";
+                shellTitle.textContent = "ServiceNow"; shellSub.textContent = "Incident INC0051384";
+                appTitle.textContent = "Close & Learn"; clock.textContent = "08:53 CET";
+            }
+            document.querySelector('main').scrollTop = 0;
+            if (window.lucide) lucide.createIcons();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (['ArrowRight', ' ', 'Enter'].includes(e.key)) {
+                e.preventDefault(); if (currentState < LAST) { currentState++; render(); }
+            } else if (['ArrowLeft', 'Backspace'].includes(e.key)) {
+                e.preventDefault(); if (currentState > 0) { currentState--; render(); }
+            } else if (e.key === 'r' || e.key === 'R') {
+                e.preventDefault(); currentState = 0; render();
+            }
+        });
+
+        window.onload = render;
+    </script>
+</body>
+</html>
